@@ -24,8 +24,11 @@ function stop() {
   $('pause').disabled = true;
 }
 function sync() {
-  canvas.width = map.width * 32;
-  canvas.height = map.height * 32;
+  const density = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = map.width * 32 * density;
+  canvas.height = map.height * 32 * density;
+  ctx.setTransform(density, 0, 0, density, 0, 0);
+  canvas.style.setProperty('--map-ratio', map.width / map.height);
   $('clearance').value = String(map.clearance);
   $('diagonal').checked = map.diagonal;
   $('x').max = map.width - 1;
@@ -78,21 +81,21 @@ function draw() {
       weight = map.cells[id];
     ctx.fillStyle =
       weight === 0
-        ? '#344d54'
+        ? '#65564a'
         : blocked[id]
-          ? '#9caeb3'
+          ? '#b6afa2'
           : weight > 1
             ? `hsl(38 42% ${91 - weight * 3}%)`
-            : '#f7faf7';
+            : '#f7f1e6';
     ctx.fillRect(x, y, 32, 32);
     if (expanded.has(id)) {
-      ctx.fillStyle = '#92c8c3';
+      ctx.fillStyle = '#c5c9ad';
       ctx.fillRect(x + 2, y + 2, 28, 28);
     } else if (frontier.has(id)) {
-      ctx.fillStyle = '#e4ce90';
+      ctx.fillStyle = '#e4c99d';
       ctx.fillRect(x + 2, y + 2, 28, 28);
     }
-    ctx.strokeStyle = '#cedcdb';
+    ctx.strokeStyle = '#dcd3c4';
     ctx.lineWidth = 0.6;
     ctx.strokeRect(x + 0.3, y + 0.3, 31.4, 31.4);
     if (weight > 1 && !blocked[id]) {
@@ -109,14 +112,14 @@ function draw() {
         y = Math.floor(id / map.width) * 32 + 16;
       index ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     });
-    ctx.strokeStyle = '#116c64';
+    ctx.strokeStyle = '#bd703d';
     ctx.lineWidth = 4;
     ctx.lineJoin = 'round';
     ctx.stroke();
   }
   for (const [id, color, label] of [
-    [map.start, '#137d75', 'S'],
-    [map.goal, '#dd8152', 'G'],
+    [map.start, '#7e8a5c', 'S'],
+    [map.goal, '#c87845', 'G'],
   ]) {
     const x = (id % map.width) * 32 + 16,
       y = Math.floor(id / map.width) * 32 + 16;
@@ -131,7 +134,7 @@ function draw() {
   }
   const x = selected % map.width,
     y = Math.floor(selected / map.width);
-  ctx.strokeStyle = '#dd8152';
+  ctx.strokeStyle = '#c87845';
   ctx.lineWidth = 2;
   ctx.strokeRect(x * 32 + 2, y * 32 + 2, 28, 28);
   $('cell-info').textContent =
@@ -382,3 +385,15 @@ $('import').onchange = async (event) => {
 };
 sync();
 calculate();
+
+for (const name of ['edit', 'analysis', 'files']) {
+  $(name + '-open').addEventListener('click', () => {
+    stop();
+    $(name + '-panel').showModal();
+  });
+  $(name + '-close').addEventListener('click', () => $(name + '-panel').close());
+}
+
+new MutationObserver(() => {
+  $('edit-status').textContent = $('status').textContent;
+}).observe($('status'), { childList: true, characterData: true, subtree: true });
