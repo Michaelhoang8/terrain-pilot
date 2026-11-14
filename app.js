@@ -88,6 +88,12 @@ function draw() {
             ? `hsl(38 42% ${91 - weight * 3}%)`
             : '#f7f1e6';
     ctx.fillRect(x, y, 32, 32);
+    if (weight === 0) {
+      ctx.fillStyle = '#ffffff20';
+      ctx.fillRect(x + 1, y + 1, 30, 3);
+      ctx.fillStyle = '#291e1840';
+      ctx.fillRect(x + 1, y + 28, 30, 3);
+    }
     if (expanded.has(id)) {
       ctx.fillStyle = '#c5c9ad';
       ctx.fillRect(x + 2, y + 2, 28, 28);
@@ -112,9 +118,49 @@ function draw() {
         y = Math.floor(id / map.width) * 32 + 16;
       index ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     });
-    ctx.strokeStyle = '#bd703d';
+    ctx.lineJoin = ctx.lineCap = 'round';
+    ctx.strokeStyle = '#fff8e8';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    const routeColor = ctx.createLinearGradient(0, 0, map.width * 32, map.height * 32);
+    routeColor.addColorStop(0, '#9b602e');
+    routeColor.addColorStop(1, '#d67b36');
+    ctx.strokeStyle = routeColor;
     ctx.lineWidth = 4;
-    ctx.lineJoin = 'round';
+    ctx.stroke();
+    for (let i = 2; i < active.path.length; i += 3) {
+      const from = active.path[i - 1],
+        to = active.path[i],
+        ax = (from % map.width) * 32 + 16,
+        ay = Math.floor(from / map.width) * 32 + 16,
+        bx = (to % map.width) * 32 + 16,
+        by = Math.floor(to / map.width) * 32 + 16,
+        angle = Math.atan2(by - ay, bx - ax);
+      ctx.save();
+      ctx.translate((ax + bx) / 2, (ay + by) / 2);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(-3, -4);
+      ctx.lineTo(1, 0);
+      ctx.lineTo(-3, 4);
+      ctx.strokeStyle = '#fff8e8';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+  if (active && cursor > 0 && cursor < active.steps.length) {
+    const current = active.steps[cursor - 1].cell;
+    ctx.beginPath();
+    ctx.arc(
+      (current % map.width) * 32 + 16,
+      Math.floor(current / map.width) * 32 + 16,
+      10,
+      0,
+      Math.PI * 2,
+    );
+    ctx.strokeStyle = '#65754b';
+    ctx.lineWidth = 2;
     ctx.stroke();
   }
   for (const [id, color, label] of [
@@ -304,6 +350,8 @@ function calculate() {
       $('ledger').append(row);
     }
   seek(active.steps.length);
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
+    canvas.animate([{ opacity: 0.65 }, { opacity: 1 }], { duration: 280, easing: 'ease-out' });
 }
 $('plan').onclick = calculate;
 $('progress').oninput = () => {

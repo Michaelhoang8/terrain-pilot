@@ -16,6 +16,8 @@ Open http://127.0.0.1:8000/. Python 3.10+ serves four static assets on loopback;
 
 The map is the main workspace, with terrain brushes, undo/redo, and search playback beside it. Planning controls sit above the map; coordinate editing, route comparisons, and file tools open separately. The canvas scales for narrow screens and high-density displays.
 
+Obstacle bevels distinguish blocked cells from traversable terrain. Completed routes have a light outline and direction chevrons, while search playback rings the most recently expanded cell. A brief recalculation fade respects reduced-motion preferences; route costs and exports remain unchanged.
+
 ## Explore
 
 - Compare A* and Dijkstra on warehouse aisles, expensive terrain, a narrow passage, or an open field.
